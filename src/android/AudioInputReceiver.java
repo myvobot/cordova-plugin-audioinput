@@ -112,17 +112,19 @@ public class AudioInputReceiver extends Thread {
 		            .build())
 		        .setBufferSizeInBytes(recordingBufferSize);
 
-		    if (noiseSuppression) {
-		        builder.setAudioProcessingConfiguration(new AudioProcessingConfig.Builder()
-		            .addAudioProcessor(new NoiseSuppressor.Builder().build())
-		            .build());
-		    }
+		    if (noiseSuppression && NoiseSuppressor.isAvailable()) {
+				noiseSuppressor = NoiseSuppressor.create(recorder.getAudioSessionId());
+				if (noiseSuppressor != null) {
+					noiseSuppressor.setEnabled(true);
+				}
+			}
 
-		    if (echoCancellation) {
-		        builder.setAudioProcessingConfiguration(new AudioProcessingConfig.Builder()
-		            .addAudioProcessor(new AcousticEchoCanceler.Builder().build())
-		            .build());
-		    }
+			if (echoCancellation && AcousticEchoCanceler.isAvailable()) {
+				echoCanceler = AcousticEchoCanceler.create(recorder.getAudioSessionId());
+				if (echoCanceler != null) {
+					echoCanceler.setEnabled(true);
+				}
+			}
 
 		    recorder = builder.build();
 		} else {
