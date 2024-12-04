@@ -80,7 +80,7 @@ public class AudioInputCapture extends CordovaPlugin
 				this.noiseSuppression = args.getBoolean(6);
 				this.echoCancellation = args.getBoolean(7);
 
-				if (args.isNull(8))  {
+				if (args.isNull(5))  {
 					this.fileUrl = null;
 				}
 				else {
@@ -171,7 +171,7 @@ public class AudioInputCapture extends CordovaPlugin
 				this.noiseSuppression = args.getBoolean(6);
 				this.echoCancellation = args.getBoolean(7);
 
-				if (args.isNull(8))  {
+				if (args.isNull(5))  {
 					this.fileUrl = null;
 				}
 				else {

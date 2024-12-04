@@ -110,7 +110,7 @@ public class AudioInputReceiver extends Thread {
 		            .setChannelMask(channelConfig)
 		            .build())
 		        .setBufferSizeInBytes(recordingBufferSize);
-
+			recorder = builder.build();
 		    if (noiseSuppression && NoiseSuppressor.isAvailable()) {
 				noiseSuppressor = NoiseSuppressor.create(recorder.getAudioSessionId());
 				if (noiseSuppressor != null) {
@@ -124,8 +124,6 @@ public class AudioInputReceiver extends Thread {
 					echoCanceler.setEnabled(true);
 				}
 			}
-
-		    recorder = builder.build();
 		} else {
 		    // 对于旧版本 Android，使用传统方式创建 AudioRecord
 		    recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
