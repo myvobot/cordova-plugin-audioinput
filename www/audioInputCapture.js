@@ -68,7 +68,9 @@ audioinput.DEFAULT = {
     STREAM_TO_WEBAUDIO: false,
     CONCATENATE_MAX_CHUNKS: 10,
     AUDIOSOURCE_TYPE: audioinput.AUDIOSOURCE_TYPE.DEFAULT,
-    DEBUG: false
+    DEBUG: false,
+    NOISE_SUPPRESSION: false,
+    ECHO_CANCELLATION: false
 };
 
 /**
@@ -135,7 +137,10 @@ audioinput.start = function (cfg) {
             audioinput._cfg.channels,
             audioinput._cfg.format,
             audioinput._cfg.audioSourceType,
-            audioinput._cfg.fileUrl]);
+            audioinput._cfg.fileUrl,
+            audioinput._cfg.noiseSuppression,
+            audioinput._cfg.echoCancellation
+        ]);
 
     audioinput._capturing = true;
 
@@ -250,6 +255,8 @@ audioinput._handleInputParameters = function (cfg) {
     audioinput._cfg.fileUrl = cfg.fileUrl || null;
     audioinput._cfg.debug = typeof cfg.normalize === 'boolean' ? cfg.debug : audioinput.DEFAULT.DEBUG;
     audioinput._onErrorCallback = typeof cfg.onError === 'function' ? cfg.onError : undefined;
+    audioinput._cfg.noiseSuppression = typeof cfg.noiseSuppression === 'boolean' ? cfg.noiseSuppression : audioinput.DEFAULT.NOISE_SUPPRESSION;
+    audioinput._cfg.echoCancellation = typeof cfg.echoCancellation === 'boolean' ? cfg.echoCancellation : audioinput.DEFAULT.ECHO_CANCELLATION;
 
     if (isNaN(audioinput._cfg.channels) || (audioinput._cfg.channels < 1 && audioinput._cfg.channels > 2)) {
         throw "Invalid number of channels (" + audioinput._cfg.channels + "). Only mono (1) and stereo (2) is" +

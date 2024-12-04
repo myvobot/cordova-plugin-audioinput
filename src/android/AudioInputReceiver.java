@@ -36,6 +36,10 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import android.media.audiofx.NoiseSuppressor;
+import android.media.audiofx.AcousticEchoCanceler;
+import android.media.AudioProcessingConfig;
+import android.os.Build;
 
 
 public class AudioInputReceiver extends Thread {
@@ -58,12 +62,14 @@ public class AudioInputReceiver extends Thread {
 	private Message message;
 	private Bundle messageBundle = new Bundle();
 	private URI fileUrl;
+	private NoiseSuppressor noiseSuppressor;
+    private AcousticEchoCanceler echoCanceler;
 
 	public AudioInputReceiver() {
 		recorder = new AudioRecord(MediaRecorder.AudioSource.DEFAULT, sampleRateInHz, channelConfig, audioFormat, minBufferSize * RECORDING_BUFFER_FACTOR);
 	}
 
-	public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource, URI fileUrl) {
+	public AudioInputReceiver(int sampleRate, int bufferSizeInBytes, int channels, String format, int audioSource, URI fileUrl, boolean noiseSuppression, boolean echoCancellation) {
 		sampleRateInHz = sampleRate;
 
 		switch (channels) {
@@ -96,7 +102,49 @@ public class AudioInputReceiver extends Thread {
 		    recordingBufferSize = minBufferSize;
 		}
 
-		recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+		    AudioRecord.Builder builder = new AudioRecord.Builder()
+		        .setAudioSource(audioSource)
+		        .setAudioFormat(new AudioFormat.Builder()
+		            .setEncoding(audioFormat)
+		            .setSampleRate(sampleRateInHz)
+		            .setChannelMask(channelConfig)
+		            .build())
+		        .setBufferSizeInBytes(recordingBufferSize);
+
+		    if (noiseSuppression) {
+		        builder.setAudioProcessingConfiguration(new AudioProcessingConfig.Builder()
+		            .addAudioProcessor(new NoiseSuppressor.Builder().build())
+		            .build());
+		    }
+
+		    if (echoCancellation) {
+		        builder.setAudioProcessingConfiguration(new AudioProcessingConfig.Builder()
+		            .addAudioProcessor(new AcousticEchoCanceler.Builder().build())
+		            .build());
+		    }
+
+		    recorder = builder.build();
+		} else {
+		    // 对于旧版本 Android，使用传统方式创建 AudioRecord
+		    recorder = new AudioRecord(audioSource, sampleRateInHz, channelConfig, audioFormat, recordingBufferSize);
+
+		    // 尝试启用降噪和回声消除
+		    if (noiseSuppression && NoiseSuppressor.isAvailable()) {
+		        noiseSuppressor = NoiseSuppressor.create(recorder.getAudioSessionId());
+		        if (noiseSuppressor != null) {
+		            noiseSuppressor.setEnabled(true);
+		        }
+		    }
+
+		    if (echoCancellation && AcousticEchoCanceler.isAvailable()) {
+		        echoCanceler = AcousticEchoCanceler.create(recorder.getAudioSessionId());
+		        if (echoCanceler != null) {
+		            echoCanceler.setEnabled(true);
+		        }
+		    }
+		}
+
 		this.fileUrl = fileUrl;
 	}
 
@@ -152,6 +200,20 @@ public class AudioInputReceiver extends Thread {
 					messageBundle.putString("error", ex.toString());
 					message.setData(messageBundle);
 					handler.sendMessage(message);
+				} finally {
+					// 在录音结束时清理资源
+					if (noiseSuppressor != null) {
+						noiseSuppressor.release();
+						noiseSuppressor = null;
+					}
+					if (echoCanceler != null) {
+						echoCanceler.release();
+						echoCanceler = null;
+					}
+					if (recorder != null) {
+						recorder.release();
+						recorder = null;
+					}
 				}
 
 			    recorder.release();

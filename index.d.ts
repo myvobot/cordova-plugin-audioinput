@@ -63,6 +63,12 @@ export interface AudioInputConfiguration {
 
   // Guess it?
   debug?: boolean;
+
+  // Optional noise suppression.
+  noiseSuppression?: boolean;
+
+  // Optional echo cancellation.
+  echoCancellation?: boolean;
 }
 
 declare interface AudioInput {

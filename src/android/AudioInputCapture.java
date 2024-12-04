@@ -60,6 +60,8 @@ public class AudioInputCapture extends CordovaPlugin
     private String format = null;
     private int audioSource = 0;
     private URI fileUrl = null;
+    private boolean noiseSuppression = false;
+    private boolean echoCancellation = false;
    
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -75,8 +77,10 @@ public class AudioInputCapture extends CordovaPlugin
 				this.channels = args.getInt(2);
 				this.format = args.getString(3);
 				this.audioSource = args.getInt(4);
+				this.noiseSuppression = args.getBoolean(6);
+				this.echoCancellation = args.getBoolean(7);
 
-				if (args.isNull(5))  {
+				if (args.isNull(8))  {
 					this.fileUrl = null;
 				}
 				else {
@@ -164,8 +168,10 @@ public class AudioInputCapture extends CordovaPlugin
 				this.channels = args.getInt(2);
 				this.format = args.getString(3);
 				this.audioSource = args.getInt(4);
+				this.noiseSuppression = args.getBoolean(6);
+				this.echoCancellation = args.getBoolean(7);
 
-				if (args.isNull(5))  {
+				if (args.isNull(8))  {
 					this.fileUrl = null;
 				}
 				else {
@@ -322,7 +328,7 @@ public class AudioInputCapture extends CordovaPlugin
 		if (receiver != null) receiver.interrupt();
 
 		if(PermissionHelper.hasPermission(this, permissions[RECORD_AUDIO])) {
-			receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource, this.fileUrl);
+			receiver = new AudioInputReceiver(this.sampleRate, this.bufferSize, this.channels, this.format, this.audioSource, this.fileUrl, this.noiseSuppression, this.echoCancellation);
 			receiver.setHandler(handler);
 			receiver.start();
 		}
