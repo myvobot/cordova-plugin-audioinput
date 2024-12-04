@@ -214,9 +214,6 @@ public class AudioInputReceiver extends Thread {
 						recorder = null;
 					}
 				}
-
-			    recorder.release();
-			    recorder = null;
 			}
 		}
 		else
